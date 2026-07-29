@@ -1,4 +1,4 @@
-// main.js — application orchestrator for MilkVision.
+// main.js — application orchestrator for Kaleidosound.
 //
 // Ties together the three concerns:
 //   AudioEngine        (input capture + gain)

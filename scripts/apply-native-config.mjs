@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const MIC_REASON =
-  'MilkVision uses the microphone to turn live sound — music, singing, or ' +
+  'Kaleidosound uses the microphone to turn live sound — music, singing, or ' +
   'ambient audio — into real-time visuals. Audio is processed on-device and ' +
   'never recorded or transmitted.';
 

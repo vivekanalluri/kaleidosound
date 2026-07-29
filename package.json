@@ -1,7 +1,7 @@
 {
-  "name": "milkvision",
+  "name": "kaleidosound",
   "version": "1.0.0",
-  "description": "MilkVision — MilkDrop-style audio visualizer for phone and TV",
+  "description": "Kaleidosound — MilkDrop-style audio visualizer for phone and TV",
   "private": true,
   "scripts": {
     "build": "node scripts/build-www.mjs",

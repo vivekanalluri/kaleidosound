@@ -1,4 +1,4 @@
-// server.js — tiny zero-dependency static file server for MilkVision.
+// server.js — tiny zero-dependency static file server for Kaleidosound.
 //
 // Run it with:  node server.js  [port]
 // Then open the printed http://localhost:<port> URL in a browser.
@@ -56,5 +56,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`MilkVision running at http://localhost:${PORT}`);
+  console.log(`Kaleidosound running at http://localhost:${PORT}`);
 });

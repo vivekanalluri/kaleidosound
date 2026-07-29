@@ -1,6 +1,6 @@
 {
-  "appId": "com.milkvision.app",
-  "appName": "MilkVision",
+  "appId": "com.kaleidosound.app",
+  "appName": "Kaleidosound",
   "webDir": "www",
   "server": {
     "androidScheme": "https"

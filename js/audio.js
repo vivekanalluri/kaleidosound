@@ -1,4 +1,4 @@
-// audio.js — audio input engine for MilkVision
+// audio.js — audio input engine for Kaleidosound
 //
 // Responsibilities:
 //   - Ask the browser for a microphone / line-in stream (getUserMedia)
