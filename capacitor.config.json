@@ -1,0 +1,14 @@
+{
+  "appId": "com.milkvision.app",
+  "appName": "MilkVision",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "never"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

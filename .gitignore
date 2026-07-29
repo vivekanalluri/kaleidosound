@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Generated Capacitor web bundle
+www/
+
+# Native platform projects (regenerate with `npx cap add ios|android`)
+ios/
+android/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db

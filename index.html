@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>MilkVision — Audio Visualizer for TV</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- The MilkDrop (WebGL) render surface fills the whole screen -->
+    <canvas id="viz" aria-label="MilkDrop music visualizer"></canvas>
+    <!-- The classic 2D visualizers (bars / waveform / spectrogram) -->
+    <canvas id="viz2d" class="canvas-hidden" aria-label="Classic music visualizer"></canvas>
+
+    <!-- Preset name / status toast -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Landing / start overlay (also handles the required user gesture) -->
+    <div id="overlay" class="overlay">
+      <div class="card">
+        <h1 class="logo">MilkVision</h1>
+        <p class="tagline">Winamp-style MilkDrop visuals for your TV</p>
+
+        <div id="chooser" class="chooser">
+          <p class="prompt">Choose an audio input to begin</p>
+          <div class="source-buttons">
+            <button id="btn-linein" class="source-btn" data-source="linein">
+              <span class="icon">🎵</span>
+              <span class="label">Line-In / Wired</span>
+              <span class="hint">Music from a cable or USB audio interface</span>
+            </button>
+            <button id="btn-mic" class="source-btn" data-source="mic">
+              <span class="icon">🎤</span>
+              <span class="label">Microphone</span>
+              <span class="hint">Karaoke, live sound, or birdsong</span>
+            </button>
+          </div>
+          <p class="fineprint">
+            Your browser will ask permission to use the audio input. Nothing is
+            recorded or sent anywhere — audio stays on this device.
+          </p>
+        </div>
+
+        <div id="loading" class="loading hidden">
+          <div class="spinner" aria-hidden="true"></div>
+          <p id="loading-text">Starting up…</p>
+        </div>
+
+        <div id="error" class="error hidden">
+          <p id="error-text"></p>
+          <button id="btn-retry" class="retry-btn">Try again</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto-hiding TV control bar -->
+    <div id="controls" class="controls" hidden>
+      <div class="controls-row">
+        <div class="control-group">
+          <label for="view-select">View</label>
+          <select id="view-select" class="tv-select">
+            <option value="milkdrop">MilkDrop presets</option>
+            <option value="bars">Frequency bars</option>
+            <option value="waveform">Waveform</option>
+            <option value="spectrogram">Spectrogram</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="source-select">Input</label>
+          <select id="source-select" class="tv-select">
+            <option value="linein">Line-In / Wired</option>
+            <option value="mic">Microphone</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="device-select">Device</label>
+          <select id="device-select" class="tv-select"></select>
+        </div>
+
+        <div class="control-group preset-browse">
+          <label for="preset-select">Browse presets</label>
+          <select id="preset-select" class="tv-select preset-select"></select>
+        </div>
+
+        <div class="control-group preset-nav">
+          <label>Preset</label>
+          <div class="preset-buttons">
+            <button id="btn-prev" class="tv-btn" title="Previous preset (←)">◀</button>
+            <button id="btn-next" class="tv-btn" title="Next preset (→)">▶</button>
+            <button id="btn-shuffle" class="tv-btn toggle" title="Shuffle (R)">🔀</button>
+            <button id="btn-cycle" class="tv-btn toggle active" title="Auto-cycle (C)">⏱</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="sensitivity">Sensitivity</label>
+          <input id="sensitivity" class="tv-range" type="range" min="0.2" max="4" step="0.1" value="1" />
+        </div>
+
+        <div class="control-group">
+          <button id="btn-fullscreen" class="tv-btn" title="Fullscreen (F)">⛶ Fullscreen</button>
+        </div>
+      </div>
+      <div class="controls-row secondary">
+        <span id="current-preset" class="current-preset"></span>
+        <span class="shortcuts">← → presets · ↑ ↓ sensitivity · V view · Enter menu · F fullscreen · R shuffle · C cycle</span>
+      </div>
+    </div>
+
+    <!-- Butterchurn (MilkDrop) engine + preset pack — bundled locally so the
+         app works fully offline and passes app-store review (no remote code). -->
+    <script src="vendor/butterchurn.min.js"></script>
+    <script src="vendor/butterchurnPresets.min.js"></script>
+    <script src="vendor/isSupported.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

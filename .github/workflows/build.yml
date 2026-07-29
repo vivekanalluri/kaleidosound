@@ -1,0 +1,108 @@
+name: Build apps
+
+# Cloud build for the phone apps. Android compiles on a Linux runner; iOS
+# compiles on a GitHub-hosted macOS runner (the "cloud Mac"), so you don't need
+# a physical Mac. The iOS job builds UNSIGNED by default to verify the app
+# compiles; producing a signed .ipa for TestFlight/App Store needs the signing
+# secrets described at the bottom of this file.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {} # lets you run it manually from the Actions tab
+
+jobs:
+  android:
+    name: Android (APK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Assemble web bundle
+        run: npm run build
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Apply native config (mic permissions)
+        run: npm run native:config
+
+      - name: Sync web assets into native project
+        run: npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: milkvision-android-debug
+          path: android/app/build/outputs/apk/debug/*.apk
+
+  ios:
+    name: iOS (cloud Mac)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Assemble web bundle
+        run: npm run build
+
+      - name: Add iOS platform
+        run: npx cap add ios
+
+      - name: Apply native config (mic permissions)
+        run: npm run native:config
+
+      - name: Sync web assets into native project
+        run: npx cap sync ios
+
+      - name: Build (unsigned compile check)
+        run: |
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+# ---------------------------------------------------------------------------
+# Producing a signed build for TestFlight / the App Store
+# ---------------------------------------------------------------------------
+# Add these repository secrets (Settings > Secrets and variables > Actions),
+# then extend the iOS job to import the certificate and archive/export a signed
+# .ipa with an App Store Connect API key:
+#
+#   IOS_DIST_CERT_P12_BASE64   base64 of your Apple Distribution .p12
+#   IOS_DIST_CERT_PASSWORD     password for that .p12
+#   IOS_PROVISION_PROFILE_B64  base64 of your App Store provisioning profile
+#   ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8_BASE64   App Store Connect API key
+#
+# A managed alternative that handles Apple signing for you is Codemagic
+# (codemagic.yaml) — it has first-class Capacitor support and a free tier of
+# macOS build minutes, which is often the fastest way to reach TestFlight.

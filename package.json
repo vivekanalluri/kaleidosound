@@ -1,0 +1,25 @@
+{
+  "name": "milkvision",
+  "version": "1.0.0",
+  "description": "MilkVision — MilkDrop-style audio visualizer for phone and TV",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-www.mjs",
+    "serve": "node server.js 5173",
+    "native:config": "node scripts/apply-native-config.mjs",
+    "sync": "npm run build && npm run native:config && npx cap sync",
+    "add:ios": "npx cap add ios && npm run native:config",
+    "add:android": "npx cap add android && npm run native:config",
+    "open:ios": "npx cap open ios",
+    "open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}
