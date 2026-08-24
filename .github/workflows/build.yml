@@ -33,14 +33,17 @@ jobs:
       - name: Assemble web bundle
         run: npm run build
 
-      - name: Add Android platform
-        run: npx cap add android
+      - name: Add Android platform (only if not committed)
+        run: if [ ! -d android ]; then npx cap add android; fi
 
       - name: Apply native config (mic permissions)
         run: npm run native:config
 
       - name: Sync web assets into native project
         run: npx cap sync android
+
+      - name: Generate app icons & splash
+        run: npx capacitor-assets generate --android
 
       - name: Build debug APK
         run: |
@@ -70,14 +73,17 @@ jobs:
       - name: Assemble web bundle
         run: npm run build
 
-      - name: Add iOS platform
-        run: npx cap add ios
+      - name: Add iOS platform (only if not committed)
+        run: if [ ! -d ios ]; then npx cap add ios; fi
 
       - name: Apply native config (mic permissions)
         run: npm run native:config
 
       - name: Sync web assets into native project
         run: npx cap sync ios
+
+      - name: Generate app icons & splash
+        run: npx capacitor-assets generate --ios
 
       - name: Build (unsigned compile check)
         run: |

@@ -7,6 +7,7 @@
     "build": "node scripts/build-www.mjs",
     "serve": "node server.js 5173",
     "native:config": "node scripts/apply-native-config.mjs",
+    "assets": "node scripts/gen-assets.mjs && npx capacitor-assets generate",
     "sync": "npm run build && npm run native:config && npx cap sync",
     "add:ios": "npx cap add ios && npm run native:config",
     "add:android": "npx cap add android && npm run native:config",
@@ -20,6 +21,7 @@
     "@capacitor/status-bar": "^7.0.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^7.0.0"
   }
 }

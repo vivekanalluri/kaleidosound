@@ -4,9 +4,15 @@ node_modules/
 # Generated Capacitor web bundle
 www/
 
-# Native platform projects (regenerate with `npx cap add ios|android`)
-ios/
-android/
+# Native platform projects (ios/ and android/) ARE committed, per Capacitor's
+# recommendation, so icons, permissions, and native tweaks persist. Only ignore
+# their build outputs.
+android/app/build/
+android/build/
+android/.gradle/
+android/capacitor-cordova-android-plugins/
+ios/App/build/
+ios/App/Pods/
 
 # OS / editor cruft
 .DS_Store
