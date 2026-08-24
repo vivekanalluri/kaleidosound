@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21 # Capacitor 7 requires JDK 21 for the Android build
 
       - name: Install dependencies
         run: npm install
@@ -59,7 +59,7 @@ jobs:
 
   ios:
     name: iOS (cloud Mac)
-    runs-on: macos-14
+    runs-on: macos-15 # Xcode 16 default; Capacitor 7 requires Xcode 16+
     steps:
       - uses: actions/checkout@v4
 
