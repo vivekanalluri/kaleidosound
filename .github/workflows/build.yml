@@ -85,15 +85,15 @@ jobs:
       - name: Generate app icons & splash
         run: npx capacitor-assets generate --ios
 
-      - name: Build (unsigned compile check)
+      - name: Build (unsigned compile check on simulator)
         run: |
           cd ios/App
           xcodebuild \
             -workspace App.xcworkspace \
             -scheme App \
             -configuration Debug \
-            -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
             build
 
