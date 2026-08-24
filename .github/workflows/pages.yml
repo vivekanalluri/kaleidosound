@@ -1,0 +1,45 @@
+name: Deploy web app to GitHub Pages
+
+# Publishes the web build (www/) to GitHub Pages so the visualizer can be
+# tested in any browser over HTTPS — including Safari on an iPhone (the mic
+# needs a secure context, which Pages provides) and the Bravia's browser.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # build-www.mjs only uses Node built-ins, so no npm install needed.
+      - name: Assemble web bundle
+        run: node scripts/build-www.mjs
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: www
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
