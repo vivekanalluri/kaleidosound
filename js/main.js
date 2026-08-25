@@ -18,23 +18,45 @@ import { enterImmersive } from './native.js';
 const VIEW_ORDER = ['milkdrop', ...CLASSIC_MODES];
 
 const MODE_LABELS = {
-  milkdrop: 'MilkDrop presets',
+  milkdrop: 'MilkDrop',
+  // Ambient
+  orb: 'Orb',
+  aurora: 'Aurora',
+  fluid: 'Fluid ink',
+  metaballs: 'Metaballs',
+  cymatics: 'Cymatics',
+  // Reactive
   bars: 'Frequency bars',
   mirror: 'Mirror bars',
   radial: 'Radial spectrum',
   kaleidoscope: 'Kaleidoscope',
   ring: 'Circular waveform',
   waveform: 'Waveform',
-  vu: 'VU meters',
-  phyllotaxis: 'Phyllotaxis',
-  spectrogram: 'Spectrogram',
-  waterfall: '3D waterfall',
-  chroma: 'Note wheel',
   tunnel: 'Warp tunnel',
   ripple: 'Beat ripples',
   pulse: 'Beat pulse',
   particles: 'Particles',
-  vectorscope: 'Vectorscope (stereo)',
+  phyllotaxis: 'Phyllotaxis',
+  // Analytic
+  spectrogram: 'Spectrogram',
+  waterfall: '3D waterfall',
+  polarspectro: 'Polar spectrogram',
+  chroma: 'Note wheel',
+  vu: 'VU meters',
+  vectorscope: 'Vectorscope',
+  stereofield: 'Stereo field',
+  dome: 'Spatial dome',
+  ribbons: 'Band ribbons',
+  hpss: 'Harmonic / percussive',
+  constellation: 'Harmonic constellation',
+  // Generative
+  attractor: 'Strange attractor',
+  voronoi: 'Voronoi cells',
+  network: 'Line network',
+  harmonograph: 'Harmonograph',
+  depthfield: 'Depth field',
+  ribbon3d: '3D ribbon',
+  flythrough: 'Terrain flythrough',
 };
 
 class App {
