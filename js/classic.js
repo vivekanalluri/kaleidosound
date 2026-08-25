@@ -718,7 +718,7 @@ export class ClassicVisualizer {
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, rr, a0, a1); ctx.closePath(); ctx.fill();
       const am = (a0 + a1) / 2, lr = outer + 16 * this._pixelRatio;
       ctx.fillStyle = 'rgba(255,255,255,0.75)';
-      ctx.font = `${Math.round(13 * this._pixelRatio)}px Segoe UI, sans-serif`;
+      ctx.font = `${Math.round(13 * this._pixelRatio)}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
       ctx.fillText(NOTE_NAMES[i], Math.cos(am) * lr, Math.sin(am) * lr);
     }
     ctx.restore();
@@ -749,7 +749,7 @@ export class ClassicVisualizer {
     ctx.lineWidth = Math.max(2, 3 * this._pixelRatio);
     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * (r - 6), cy + Math.sin(a) * (r - 6)); ctx.stroke();
     ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.font = `${Math.round(12 * this._pixelRatio)}px Segoe UI, sans-serif`; ctx.textAlign = 'center';
+    ctx.font = `${Math.round(12 * this._pixelRatio)}px -apple-system, "Helvetica Neue", Arial, sans-serif`; ctx.textAlign = 'center';
     ctx.fillText(label, cx, cy + 22 * this._pixelRatio);
   }
 
@@ -803,7 +803,7 @@ export class ClassicVisualizer {
     // Reference grid: centre line + edges.
     ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = `${Math.round(11 * this._pixelRatio)}px Segoe UI`;
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = `${Math.round(11 * this._pixelRatio)}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
     ctx.textAlign = 'left'; ctx.fillText('L', 8, h - 8);
     ctx.textAlign = 'right'; ctx.fillText('R', w - 8, h - 8);
     const n = 48, { l, r } = this._stereoBands(n);
@@ -873,7 +873,7 @@ export class ClassicVisualizer {
       ctx.fillStyle = `rgba(${r},${g},${b},0.45)`; ctx.fill();
       ctx.strokeStyle = `rgba(${r},${g},${b},0.9)`; ctx.lineWidth = 1.5 * this._pixelRatio; ctx.stroke();
       ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.textAlign = 'left';
-      ctx.font = `${Math.round(11 * this._pixelRatio)}px Segoe UI`;
+      ctx.font = `${Math.round(11 * this._pixelRatio)}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
       ctx.fillText(labels[bi], 8, baseY - 6);
     }
   }
