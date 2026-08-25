@@ -20,8 +20,21 @@ const VIEW_ORDER = ['milkdrop', ...CLASSIC_MODES];
 const MODE_LABELS = {
   milkdrop: 'MilkDrop presets',
   bars: 'Frequency bars',
+  mirror: 'Mirror bars',
+  radial: 'Radial spectrum',
+  kaleidoscope: 'Kaleidoscope',
+  ring: 'Circular waveform',
   waveform: 'Waveform',
+  vu: 'VU meters',
+  phyllotaxis: 'Phyllotaxis',
   spectrogram: 'Spectrogram',
+  waterfall: '3D waterfall',
+  chroma: 'Note wheel',
+  tunnel: 'Warp tunnel',
+  ripple: 'Beat ripples',
+  pulse: 'Beat pulse',
+  particles: 'Particles',
+  vectorscope: 'Vectorscope (stereo)',
 };
 
 class App {
@@ -94,8 +107,12 @@ class App {
         this.viz.start();
         this.started = true;
 
-        // The classic visualizers read from the shared analyser.
-        this.classic.init(this.audio.analyser);
+        // The classic visualizers read from the shared analyser (plus the
+        // per-channel analysers for the stereo vectorscope).
+        this.classic.init(this.audio.analyser, {
+          left: this.audio.analyserL,
+          right: this.audio.analyserR,
+        });
 
         // Populate the browse dropdown once presets are loaded.
         this.ui.setPresetList(

@@ -33,6 +33,12 @@ export class AudioEngine {
     this.gainNode = null;
     /** @type {AnalyserNode|null} shared FFT node for the classic visualizers */
     this.analyser = null;
+    /** @type {ChannelSplitterNode|null} */
+    this.splitter = null;
+    /** @type {AnalyserNode|null} left-channel analyser (for the vectorscope) */
+    this.analyserL = null;
+    /** @type {AnalyserNode|null} right-channel analyser (for the vectorscope) */
+    this.analyserR = null;
     /** current logical source: 'linein' | 'mic' */
     this.sourceType = 'linein';
     /** currently active input deviceId, if known */
@@ -114,6 +120,19 @@ export class AudioEngine {
       this.analyser.smoothingTimeConstant = 0.8;
       this.gainNode.connect(this.analyser);
     }
+    // Per-channel analysers for the stereo vectorscope. A mono source (typical
+    // microphone) simply feeds both channels the same signal, so the scope
+    // degrades gracefully to a phase plot rather than breaking.
+    if (!this.splitter) {
+      this.splitter = this.audioContext.createChannelSplitter(2);
+      this.analyserL = this.audioContext.createAnalyser();
+      this.analyserR = this.audioContext.createAnalyser();
+      this.analyserL.fftSize = 2048;
+      this.analyserR.fftSize = 2048;
+      this.gainNode.connect(this.splitter);
+      this.splitter.connect(this.analyserL, 0);
+      this.splitter.connect(this.analyserR, 1);
+    }
     this.sourceNode.connect(this.gainNode);
 
     return this.gainNode;
@@ -165,6 +184,12 @@ export class AudioEngine {
     if (this.analyser) {
       try { this.analyser.disconnect(); } catch (_) { /* noop */ }
       this.analyser = null;
+    }
+    for (const n of ['splitter', 'analyserL', 'analyserR']) {
+      if (this[n]) {
+        try { this[n].disconnect(); } catch (_) { /* noop */ }
+        this[n] = null;
+      }
     }
     if (this.gainNode) {
       try { this.gainNode.disconnect(); } catch (_) { /* noop */ }
