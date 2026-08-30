@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'www');
 
 // Everything the running app needs at runtime (no node_modules, no tooling).
-const ASSETS = ['index.html', 'styles.css', 'js', 'vendor'];
+const ASSETS = ['index.html', 'styles.css', 'js', 'vendor', 'manifest.webmanifest', 'icons'];
 
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });

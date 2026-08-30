@@ -39,7 +39,7 @@ export const CLASSIC_MODES = [
   // Ambient
   'orb', 'aurora', 'fluid', 'metaballs', 'cymatics',
   // Reactive
-  'bars', 'mirror', 'radial', 'kaleidoscope', 'ring', 'waveform',
+  'bars', 'mirror', 'spectrum', 'radial', 'kaleidoscope', 'ring', 'waveform',
   'tunnel', 'ripple', 'pulse', 'particles', 'phyllotaxis',
   // Analytic
   'spectrogram', 'waterfall', 'polarspectro', 'chroma', 'vu', 'vectorscope',
@@ -65,7 +65,7 @@ export class ClassicVisualizer {
     this.timeR = null;
     this.mode = 'bars';
     this._rafId = null;
-    this._pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    this._pixelRatio = Math.min(window.devicePixelRatio || 1, 3);
 
     // Shared audio features.
     this.level = 0;
@@ -143,7 +143,7 @@ export class ClassicVisualizer {
   }
 
   resize() {
-    this._pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    this._pixelRatio = Math.min(window.devicePixelRatio || 1, 3);
     this.canvas.width = Math.max(1, Math.floor(window.innerWidth * this._pixelRatio));
     this.canvas.height = Math.max(1, Math.floor(window.innerHeight * this._pixelRatio));
     this._polarInit = false;
@@ -244,6 +244,7 @@ export class ClassicVisualizer {
       case 'cymatics': return this._drawCymatics();
       // Reactive
       case 'mirror': return this._drawMirror();
+      case 'spectrum': return this._drawSpectrum();
       case 'radial': return this._drawRadial();
       case 'kaleidoscope': return this._drawKaleidoscope();
       case 'ring': return this._drawRing();
@@ -316,6 +317,41 @@ export class ClassicVisualizer {
       ctx.fillRect(x, mid - py - 2, bw, 2);
       ctx.fillRect(x, mid + py, bw, 2);
     }
+  }
+
+  // Smooth, calm, multicolour mirrored spectrum (filled area around centre).
+  _drawSpectrum() {
+    const { ctx, canvas } = this;
+    const w = canvas.width, h = canvas.height, mid = h / 2;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
+    const n = 96, bands = this._bands(n);
+    const amp = h * 0.42;
+    const grad = ctx.createLinearGradient(0, 0, w, 0);
+    grad.addColorStop(0, '#21e6c1');
+    grad.addColorStop(0.5, '#7b5cff');
+    grad.addColorStop(1, '#ff4d9d');
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const x = (i / (n - 1)) * w;
+      const y = mid - bands[i] * amp;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    for (let i = n - 1; i >= 0; i--) {
+      const x = (i / (n - 1)) * w;
+      ctx.lineTo(x, mid + bands[i] * amp);
+    }
+    ctx.closePath();
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 2 * this._pixelRatio;
+    ctx.shadowColor = '#7b5cff';
+    ctx.shadowBlur = 12 * this._pixelRatio;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
   }
 
   _drawRadial() {
@@ -889,8 +925,10 @@ export class ClassicVisualizer {
     ctx.beginPath(); ctx.moveTo(0, h);
     for (let i = 0; i < n; i++) ctx.lineTo((i / (n - 1)) * w, mid - bands[i] * h * 0.34);
     ctx.lineTo(w, h); ctx.closePath();
-    const g = ctx.createLinearGradient(0, mid - h * 0.34, 0, h);
-    g.addColorStop(0, 'rgba(90,170,255,0.65)'); g.addColorStop(1, 'rgba(40,60,160,0.15)');
+    const g = ctx.createLinearGradient(0, 0, w, 0);
+    g.addColorStop(0, 'rgba(33,230,193,0.7)');
+    g.addColorStop(0.5, 'rgba(123,92,255,0.7)');
+    g.addColorStop(1, 'rgba(255,77,157,0.7)');
     ctx.fillStyle = g; ctx.fill();
     // Percussive layer (top): vertical flashes on transients.
     const perc = Math.min(1, this.flux * 6);

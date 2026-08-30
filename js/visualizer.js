@@ -54,7 +54,7 @@ export class MilkdropVisualizer {
 
     this._rafId = null;
     this._cycleTimer = null;
-    this._pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    this._pixelRatio = Math.min(window.devicePixelRatio || 1, 3);
 
     /** Optional callback(presetName) fired when the preset changes. */
     this.onPresetChange = null;
@@ -264,7 +264,7 @@ export class MilkdropVisualizer {
   /** Resize the renderer + canvas backing store to match the viewport. */
   resize() {
     if (!this.visualizer) return;
-    this._pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    this._pixelRatio = Math.min(window.devicePixelRatio || 1, 3);
     const { width, height } = this._computeSize();
     this.visualizer.setRendererSize(width, height);
     this.canvas.width = width;

@@ -4,166 +4,79 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
-    <title>Kaleidosound — Audio Visualizer</title>
+    <title>Kaleidosound</title>
+
+    <!-- PWA: "Add to Home Screen" launches chrome-less (clean casting) -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Kaleidosound" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <!-- The MilkDrop (WebGL) render surface fills the whole screen -->
-    <canvas id="viz" aria-label="MilkDrop music visualizer"></canvas>
-    <!-- The classic 2D visualizers (bars / waveform / spectrogram) -->
-    <canvas id="viz2d" class="canvas-hidden" aria-label="Classic music visualizer"></canvas>
-    <!-- The Winamp AVS (webvs) WebGL surface -->
-    <canvas id="vizavs" class="canvas-hidden" aria-label="AVS music visualizer"></canvas>
-    <!-- The GLSL shader engine (G-Force-style) WebGL surface -->
-    <canvas id="vizshader" class="canvas-hidden" aria-label="Shader music visualizer"></canvas>
+    <!-- MilkDrop (WebGL) surface -->
+    <canvas id="viz" aria-label="Music visualizer"></canvas>
+    <!-- Classic 2D visualizer surface -->
+    <canvas id="viz2d" class="canvas-hidden" aria-label="Music visualizer"></canvas>
 
     <!-- Preset name / status toast -->
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <!-- Landing / start overlay (also handles the required user gesture) -->
-    <div id="overlay" class="overlay">
-      <div class="card">
-        <h1 class="logo">Kaleidosound</h1>
-        <p class="tagline">Winamp-style MilkDrop visuals for phone and TV</p>
-
-        <div id="chooser" class="chooser">
-          <p class="prompt">Choose an audio input to begin</p>
-          <div class="source-buttons">
-            <button id="btn-linein" class="source-btn" data-source="linein">
-              <span class="icon">🎵</span>
-              <span class="label">Line-In / Wired</span>
-              <span class="hint">Music from a cable or USB audio interface</span>
-            </button>
-            <button id="btn-mic" class="source-btn" data-source="mic">
-              <span class="icon">🎤</span>
-              <span class="label">Microphone</span>
-              <span class="hint">Karaoke, live sound, or birdsong</span>
-            </button>
-          </div>
-          <p class="fineprint">
-            Your browser will ask permission to use the audio input. Nothing is
-            recorded or sent anywhere — audio stays on this device.
-          </p>
-        </div>
-
-        <div id="loading" class="loading hidden">
-          <div class="spinner" aria-hidden="true"></div>
-          <p id="loading-text">Starting up…</p>
-        </div>
-
-        <div id="error" class="error hidden">
-          <p id="error-text"></p>
-          <button id="btn-retry" class="retry-btn">Try again</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Auto-hiding TV control bar -->
+    <!-- Bottom control bar (auto-hides; every control has a header) -->
     <div id="controls" class="controls" hidden>
       <div class="controls-row">
         <div class="control-group">
-          <label for="view-select">View</label>
-          <select id="view-select" class="tv-select">
-            <optgroup label="Presets">
-              <option value="milkdrop">MilkDrop</option>
-              <option value="avs">AVS (Winamp)</option>
-              <option value="shaders">Shaders (G-Force style)</option>
-            </optgroup>
-            <optgroup label="Ambient">
-              <option value="orb">Orb</option>
-              <option value="aurora">Aurora</option>
-              <option value="fluid">Fluid ink</option>
-              <option value="metaballs">Metaballs</option>
-              <option value="cymatics">Cymatics</option>
-            </optgroup>
-            <optgroup label="Reactive">
-              <option value="bars">Frequency bars</option>
-              <option value="mirror">Mirror bars</option>
-              <option value="radial">Radial spectrum</option>
-              <option value="kaleidoscope">Kaleidoscope</option>
-              <option value="ring">Circular waveform</option>
-              <option value="waveform">Waveform</option>
-              <option value="tunnel">Warp tunnel</option>
-              <option value="ripple">Beat ripples</option>
-              <option value="pulse">Beat pulse</option>
-              <option value="particles">Particles</option>
-              <option value="phyllotaxis">Phyllotaxis</option>
-            </optgroup>
-            <optgroup label="Analytic">
-              <option value="spectrogram">Spectrogram</option>
-              <option value="waterfall">3D waterfall</option>
-              <option value="polarspectro">Polar spectrogram</option>
-              <option value="chroma">Note wheel</option>
-              <option value="vu">VU meters</option>
-              <option value="vectorscope">Vectorscope</option>
-              <option value="stereofield">Stereo field</option>
-              <option value="dome">Spatial dome</option>
-              <option value="ribbons">Band ribbons</option>
-              <option value="hpss">Harmonic / percussive</option>
-              <option value="constellation">Harmonic constellation</option>
-            </optgroup>
-            <optgroup label="Generative">
-              <option value="attractor">Strange attractor</option>
-              <option value="voronoi">Voronoi cells</option>
-              <option value="network">Line network</option>
-              <option value="harmonograph">Harmonograph</option>
-              <option value="depthfield">Depth field</option>
-              <option value="ribbon3d">3D ribbon</option>
-              <option value="flythrough">Terrain flythrough</option>
-            </optgroup>
-          </select>
+          <span class="ctl-label">Visual Preset</span>
+          <select id="preset-select" class="tv-select" aria-label="Visual preset"></select>
         </div>
 
         <div class="control-group">
-          <label for="source-select">Input</label>
-          <select id="source-select" class="tv-select">
-            <option value="linein">Line-In / Wired</option>
+          <span class="ctl-label">Audio</span>
+          <select id="source-select" class="tv-select" aria-label="Audio source">
             <option value="mic">Microphone</option>
+            <option value="linein">Line-In</option>
           </select>
         </div>
 
         <div class="control-group">
-          <label for="device-select">Device</label>
-          <select id="device-select" class="tv-select"></select>
-        </div>
-
-        <div class="control-group preset-browse">
-          <label for="preset-select">Browse presets</label>
-          <select id="preset-select" class="tv-select preset-select"></select>
-        </div>
-
-        <div class="control-group preset-nav">
-          <label>Preset</label>
-          <div class="preset-buttons">
-            <button id="btn-prev" class="tv-btn" title="Previous preset (←)">◀</button>
-            <button id="btn-next" class="tv-btn" title="Next preset (→)">▶</button>
-            <button id="btn-shuffle" class="tv-btn toggle" title="Shuffle (R)">🔀</button>
-            <button id="btn-cycle" class="tv-btn toggle active" title="Auto-cycle (C)">⏱</button>
-          </div>
+          <span class="ctl-label">Device</span>
+          <select id="device-select" class="tv-select" aria-label="Audio device"></select>
         </div>
 
         <div class="control-group">
-          <label for="sensitivity">Sensitivity</label>
-          <input id="sensitivity" class="tv-range" type="range" min="0.2" max="4" step="0.1" value="1" />
+          <span class="ctl-label">Shuffle</span>
+          <button id="btn-shuffle" class="tv-btn toggle" aria-label="Shuffle presets">🔀</button>
         </div>
 
         <div class="control-group">
-          <button id="btn-fullscreen" class="tv-btn" title="Fullscreen (F)">⛶ Fullscreen</button>
+          <span class="ctl-label">Timer</span>
+          <button id="btn-timer" class="tv-btn toggle active" aria-label="Auto-advance presets">⏱</button>
         </div>
-      </div>
-      <div class="controls-row secondary">
-        <span id="current-preset" class="current-preset"></span>
-        <span class="shortcuts">← → presets · ↑ ↓ sensitivity · V view · Enter menu · F fullscreen · R shuffle · C cycle</span>
+
+        <div class="control-group">
+          <span class="ctl-label">Sensitivity</span>
+          <input id="sensitivity" class="tv-range" type="range" min="0.2" max="4" step="0.1" value="1" aria-label="Sensitivity" />
+        </div>
+
+        <div class="control-group">
+          <span class="ctl-label">Brightness</span>
+          <input id="brightness" class="tv-range" type="range" min="0.15" max="1" step="0.05" value="1" aria-label="Brightness" />
+        </div>
+
+        <div class="control-group">
+          <span class="ctl-label">Full Screen</span>
+          <button id="btn-fullscreen" class="tv-btn" aria-label="Toggle fullscreen">⛶</button>
+        </div>
       </div>
     </div>
 
-    <!-- Butterchurn (MilkDrop) engine + preset pack — bundled locally so the
-         app works fully offline and passes app-store review (no remote code). -->
+    <!-- Butterchurn (MilkDrop) engine + preset pack, bundled locally -->
     <script src="vendor/butterchurn.min.js"></script>
     <script src="vendor/butterchurnPresets.min.js"></script>
     <script src="vendor/isSupported.min.js"></script>
-    <!-- Winamp AVS engine (open-source webvs port), bundled locally -->
-    <script src="vendor/webvs.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

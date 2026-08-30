@@ -55,6 +55,33 @@ export class AudioEngine {
   }
 
   /**
+   * Build the Web Audio graph (context + gain + analysers) WITHOUT a stream.
+   * Called at app load so the visualizers can render immediately (reacting to
+   * silence) before the user grants mic access. The AudioContext starts
+   * suspended per autoplay policy; start() resumes it on the first gesture.
+   */
+  prepare() {
+    if (this.audioContext) return;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) throw new Error('Web Audio is not available in this browser.');
+    this.audioContext = new Ctx();
+    this.gainNode = this.audioContext.createGain();
+    this.gainNode.gain.value = 1;
+    this.analyser = this.audioContext.createAnalyser();
+    this.analyser.fftSize = 2048;
+    this.analyser.smoothingTimeConstant = 0.8;
+    this.gainNode.connect(this.analyser);
+    this.splitter = this.audioContext.createChannelSplitter(2);
+    this.analyserL = this.audioContext.createAnalyser();
+    this.analyserR = this.audioContext.createAnalyser();
+    this.analyserL.fftSize = 2048;
+    this.analyserR.fftSize = 2048;
+    this.gainNode.connect(this.splitter);
+    this.splitter.connect(this.analyserL, 0);
+    this.splitter.connect(this.analyserR, 1);
+  }
+
+  /**
    * Start (or restart) capture for the given source type / device.
    * Requires a user gesture on first call so the AudioContext can start and
    * the permission prompt can appear.
