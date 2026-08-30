@@ -395,6 +395,23 @@ export class ClassicVisualizer {
     ctx.shadowBlur = 12 * this._pixelRatio;
     ctx.stroke();
     ctx.shadowBlur = 0;
+
+    // Peak-hold white outline that slowly falls, mirrored top and bottom.
+    if (!this._peaks || this._peaks.length !== n) this._peaks = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      this._peaks[i] = Math.max(bands[i], this._peaks[i] - this._dt * 0.4);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 2 * this._pixelRatio;
+    for (const dir of [-1, 1]) {
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const x = (i / (n - 1)) * w;
+        const y = mid + dir * this._peaks[i] * amp;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
   }
 
   _drawRadial() {
