@@ -12,6 +12,10 @@
     <canvas id="viz" aria-label="MilkDrop music visualizer"></canvas>
     <!-- The classic 2D visualizers (bars / waveform / spectrogram) -->
     <canvas id="viz2d" class="canvas-hidden" aria-label="Classic music visualizer"></canvas>
+    <!-- The Winamp AVS (webvs) WebGL surface -->
+    <canvas id="vizavs" class="canvas-hidden" aria-label="AVS music visualizer"></canvas>
+    <!-- The GLSL shader engine (G-Force-style) WebGL surface -->
+    <canvas id="vizshader" class="canvas-hidden" aria-label="Shader music visualizer"></canvas>
 
     <!-- Preset name / status toast -->
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -62,6 +66,8 @@
           <select id="view-select" class="tv-select">
             <optgroup label="Presets">
               <option value="milkdrop">MilkDrop</option>
+              <option value="avs">AVS (Winamp)</option>
+              <option value="shaders">Shaders (G-Force style)</option>
             </optgroup>
             <optgroup label="Ambient">
               <option value="orb">Orb</option>
@@ -156,6 +162,8 @@
     <script src="vendor/butterchurn.min.js"></script>
     <script src="vendor/butterchurnPresets.min.js"></script>
     <script src="vendor/isSupported.min.js"></script>
+    <!-- Winamp AVS engine (open-source webvs port), bundled locally -->
+    <script src="vendor/webvs.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

@@ -37,7 +37,9 @@ body.cursor-hidden {
 
 /* Full-bleed render surfaces (WebGL MilkDrop + classic 2D, stacked) */
 #viz,
-#viz2d {
+#viz2d,
+#vizavs,
+#vizshader {
   position: fixed;
   inset: 0;
   width: 100vw;

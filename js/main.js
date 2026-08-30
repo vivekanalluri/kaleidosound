@@ -11,14 +11,22 @@
 import { AudioEngine } from './audio.js';
 import { MilkdropVisualizer, isSupported } from './visualizer.js';
 import { ClassicVisualizer, CLASSIC_MODES } from './classic.js';
+import { AvsVisualizer, isAvsSupported } from './avs.js';
+import { ShaderVisualizer, isShaderSupported } from './shaders.js';
 import { UI } from './ui.js';
 import { enterImmersive } from './native.js';
 
-// View modes: MilkDrop (WebGL) first, then the classic 2D visualizers.
-const VIEW_ORDER = ['milkdrop', ...CLASSIC_MODES];
+// View modes: the preset engines (MilkDrop, AVS, Shaders) first, then the
+// classic 2D visualizers.
+const VIEW_ORDER = ['milkdrop', 'avs', 'shaders', ...CLASSIC_MODES];
+
+// Engines that have browsable presets (so the ◀ ▶ nav applies).
+const PRESET_ENGINES = ['milkdrop', 'avs', 'shaders'];
 
 const MODE_LABELS = {
   milkdrop: 'MilkDrop',
+  avs: 'AVS (Winamp)',
+  shaders: 'Shaders (G-Force style)',
   // Ambient
   orb: 'Orb',
   aurora: 'Aurora',
@@ -63,9 +71,13 @@ class App {
   constructor() {
     this.canvas = document.getElementById('viz');
     this.canvas2d = document.getElementById('viz2d');
+    this.canvasAvs = document.getElementById('vizavs');
     this.audio = new AudioEngine();
     this.viz = new MilkdropVisualizer(this.canvas);
     this.classic = new ClassicVisualizer(this.canvas2d);
+    this.avs = new AvsVisualizer(this.canvasAvs);
+    this.canvasShader = document.getElementById('vizshader');
+    this.shaders = new ShaderVisualizer(this.canvasShader);
     this.ui = new UI();
     this.started = false;
     this.sensitivity = 1;
@@ -84,6 +96,8 @@ class App {
     }
 
     this.viz.onPresetChange = (name) => this.ui.setPresetName(name);
+    this.avs.onPresetChange = (name) => this.ui.setPresetName(name);
+    this.shaders.onPresetChange = (name) => this.ui.setPresetName(name);
 
     this.ui.bind({
       onChooseSource: (type) => this.startWithSource(type),
@@ -92,8 +106,16 @@ class App {
       onDeviceChange: (deviceId) => this.switchInput({ deviceId }),
       onModeChange: (mode) => this.setMode(mode),
       onCycleMode: () => this.cycleMode(),
-      onPrev: () => this.viz.prevPreset(),
-      onNext: () => this.viz.nextPreset(),
+      onPrev: () => {
+        if (this.mode === 'milkdrop') this.viz.prevPreset();
+        else if (this.mode === 'avs') this.avs.prev();
+        else if (this.mode === 'shaders') this.shaders.prev();
+      },
+      onNext: () => {
+        if (this.mode === 'milkdrop') this.viz.nextPreset();
+        else if (this.mode === 'avs') this.avs.next();
+        else if (this.mode === 'shaders') this.shaders.next();
+      },
       onPresetSelect: (name) => this.viz.loadPresetByName(name),
       onToggleShuffle: () => this.toggleShuffle(),
       onToggleCycle: () => this.toggleCycle(),
@@ -104,6 +126,8 @@ class App {
     window.addEventListener('resize', () => {
       this.viz.resize();
       this.classic.resize();
+      this.avs.resize();
+      this.shaders.resize();
     });
 
     // Re-acquire the screen wake lock when returning to the app (the OS drops
@@ -135,6 +159,28 @@ class App {
           left: this.audio.analyserL,
           right: this.audio.analyserR,
         });
+
+        // The Winamp AVS engine (webvs) — optional; guarded so a load failure
+        // never blocks the rest of the app. Initialized but not started until
+        // the AVS view is selected.
+        if (isAvsSupported()) {
+          try {
+            this.avs.init(this.audio.audioContext, node);
+            this.avs.stop();
+          } catch (e) {
+            console.warn('AVS engine unavailable:', e);
+          }
+        }
+
+        // The GLSL shader engine (G-Force-style). Reads the shared analyser.
+        if (isShaderSupported()) {
+          try {
+            this.shaders.init(this.audio.analyser);
+            this.shaders.stop();
+          } catch (e) {
+            console.warn('Shader engine unavailable:', e);
+          }
+        }
 
         // Populate the browse dropdown once presets are loaded.
         this.ui.setPresetList(
@@ -199,30 +245,51 @@ class App {
     }
   }
 
-  /** Switch between MilkDrop and the classic 2D views. */
+  /** Switch between the MilkDrop / AVS engines and the classic 2D views. */
   setMode(mode) {
     if (!VIEW_ORDER.includes(mode)) return;
+    if (mode === 'avs' && !this.avs.ready) {
+      this.ui.toast('AVS engine is unavailable in this browser', 2200);
+      return;
+    }
+    if (mode === 'shaders' && !this.shaders.ready) {
+      this.ui.toast('Shader engine is unavailable in this browser', 2200);
+      return;
+    }
     this.mode = mode;
     const isMilk = mode === 'milkdrop';
+    const isAvs = mode === 'avs';
+    const isShaders = mode === 'shaders';
+    const isClassic = !isMilk && !isAvs && !isShaders;
 
-    // Show the matching canvas, hide the other.
+    // Show only the active canvas.
     this.canvas.classList.toggle('canvas-hidden', !isMilk);
-    this.canvas2d.classList.toggle('canvas-hidden', isMilk);
+    this.canvasAvs.classList.toggle('canvas-hidden', !isAvs);
+    this.canvasShader.classList.toggle('canvas-hidden', !isShaders);
+    this.canvas2d.classList.toggle('canvas-hidden', !isClassic);
 
     // Only one render loop runs at a time (saves GPU/CPU).
+    this.viz.stop();
+    this.avs.stop();
+    this.shaders.stop();
+    this.classic.stop();
     if (isMilk) {
-      this.classic.stop();
       this.viz.resize();
       this.viz.start();
+    } else if (isAvs) {
+      this.avs.start();
+    } else if (isShaders) {
+      this.shaders.start();
     } else {
-      this.viz.stop();
       this.classic.setMode(mode);
       this.classic.resize();
       this.classic.start();
     }
 
     this.ui.setViewMode(mode);
-    this.ui.setMilkdropControlsEnabled(isMilk);
+    // Preset nav (◀ ▶) applies to any preset engine; the browse dropdown is
+    // MilkDrop-specific but harmless when idle.
+    this.ui.setMilkdropControlsEnabled(PRESET_ENGINES.includes(mode));
     this.ui.toast(MODE_LABELS[mode] || mode, 1600);
   }
 
