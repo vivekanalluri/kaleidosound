@@ -112,10 +112,10 @@ export class ClassicVisualizer {
     this._polarInit = false;
 
     this._specRows = 256;
-    this._col = document.createElement('canvas');
-    this._col.width = 1;
-    this._col.height = this._specRows;
-    this._colCtx = this._col.getContext('2d');
+    this._colCanvas = document.createElement('canvas');
+    this._colCanvas.width = 1;
+    this._colCanvas.height = this._specRows;
+    this._colCtx = this._colCanvas.getContext('2d');
     this._colImage = this._colCtx.createImageData(1, this._specRows);
   }
 
@@ -713,7 +713,7 @@ export class ClassicVisualizer {
     }
     this._colCtx.putImageData(this._colImage, 0, 0);
     ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(this._col, 0, 0, 1, rows, w - shift, 0, shift, h);
+    ctx.drawImage(this._colCanvas, 0, 0, 1, rows, w - shift, 0, shift, h);
   }
 
   _drawWaterfall() {
