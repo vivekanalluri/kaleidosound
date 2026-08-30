@@ -23,6 +23,10 @@ const PRESETS = [
   { label: 'H Bars', engine: 'classic', mode: 'mirror' },
   { label: 'Spectrum', engine: 'classic', mode: 'spectrum' },
   { label: 'Radial', engine: 'classic', mode: 'radial' },
+  { label: 'Ring', engine: 'classic', mode: 'ring' },
+  { label: 'Waveform', engine: 'classic', mode: 'waveform' },
+  { label: 'VU Meters', engine: 'classic', mode: 'vu' },
+  { label: 'Ripple', engine: 'classic', mode: 'ripple' },
   { label: 'Constellation', engine: 'classic', mode: 'constellation' },
 ];
 
@@ -41,6 +45,7 @@ class App {
     this.sourceType = 'mic';
     this.sensitivity = 1;
     this.brightness = 1;
+    this.colorScheme = 'multicolor';
     this.shuffle = false;
     this.timerOn = true;
     this.audioStarted = false;
@@ -88,10 +93,13 @@ class App {
       onToggleTimer: () => this.toggleTimer(),
       onSensitivity: (v) => this.setSensitivity(v),
       onBrightness: (v) => this.setBrightness(v),
+      onColorChange: (name) => this.setColor(name),
     });
 
     this.ui.setPresetOptions(PRESETS.map((p) => p.label));
     this.ui.setSourceType(this.sourceType);
+    this.ui.setColorValue(this.colorScheme);
+    this.classic.setPalette(this.colorScheme);
     this.ui.setSensitivityValue(this.sensitivity);
     this.ui.setBrightnessValue(this.brightness);
     this.ui.setShuffleState(this.shuffle);
@@ -247,6 +255,12 @@ class App {
   setBrightness(value) {
     this.brightness = value;
     document.documentElement.style.setProperty('--dim', String(value));
+  }
+
+  setColor(name) {
+    this.colorScheme = name;
+    this.classic.setPalette(name);
+    this.ui.toast('Color: ' + name, 1200);
   }
 
   async _acquireWakeLock() {

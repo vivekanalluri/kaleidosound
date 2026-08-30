@@ -14,6 +14,7 @@ export class UI {
     this.el = {
       controls: document.getElementById('controls'),
       presetSelect: document.getElementById('preset-select'),
+      colorSelect: document.getElementById('color-select'),
       sourceSelect: document.getElementById('source-select'),
       deviceSelect: document.getElementById('device-select'),
       shuffle: document.getElementById('btn-shuffle'),
@@ -35,6 +36,9 @@ export class UI {
 
     this.el.presetSelect.addEventListener('change', (e) =>
       h.onPresetSelect?.(parseInt(e.target.value, 10))
+    );
+    this.el.colorSelect.addEventListener('change', (e) =>
+      h.onColorChange?.(e.target.value)
     );
     this.el.sourceSelect.addEventListener('change', (e) =>
       h.onSourceChange?.(e.target.value)
@@ -145,6 +149,10 @@ export class UI {
 
   setSourceType(sourceType) {
     this.el.sourceSelect.value = sourceType;
+  }
+
+  setColorValue(name) {
+    this.el.colorSelect.value = name;
   }
 
   // ---- Toggles / sliders ---------------------------------------------------

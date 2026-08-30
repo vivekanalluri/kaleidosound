@@ -34,6 +34,19 @@ function inferno(t) {
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
+// Colour schemes. 'multicolor' spreads hue across the spectrum; the rest are
+// two/three-stop gradients. Amplitude still drives brightness at the draw site,
+// so louder = brighter (the perceptually-correct mapping for audio).
+export const PALETTES = {
+  multicolor: { hue: true, h0: 0, span: 300, sat: 90, light: 55 },
+  aurora: { stops: [[33, 230, 193], [123, 92, 255], [255, 77, 157]] },
+  ember: { stops: [[255, 214, 102], [255, 122, 26], [224, 30, 55]] },
+  magenta: { stops: [[255, 90, 200], [162, 75, 255], [96, 92, 255]] },
+  ocean: { stops: [[34, 224, 192], [42, 163, 255], [59, 91, 255]] },
+  sunset: { stops: [[255, 209, 102], [255, 94, 148], [142, 68, 255]] },
+  ice: { stops: [[224, 246, 255], [130, 205, 255], [96, 130, 255]] },
+};
+
 // Grouped for the View menu: Ambient / Reactive / Analytic / Generative.
 export const CLASSIC_MODES = [
   // Ambient
@@ -64,6 +77,8 @@ export class ClassicVisualizer {
     this.timeL = null;
     this.timeR = null;
     this.mode = 'bars';
+    this.paletteName = 'multicolor';
+    this.palette = PALETTES.multicolor;
     this._rafId = null;
     this._pixelRatio = Math.min(window.devicePixelRatio || 1, 3);
 
@@ -232,6 +247,26 @@ export class ClassicVisualizer {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
+  /** Switch the active colour scheme. */
+  setPalette(name) {
+    this.paletteName = PALETTES[name] ? name : 'multicolor';
+    this.palette = PALETTES[this.paletteName];
+  }
+
+  /** Colour from the active palette at position t (0..1), with alpha a. */
+  _col(t, a = 1) {
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const p = this.palette;
+    if (p.hue) return `hsla(${p.h0 + t * p.span}, ${p.sat}%, ${p.light}%, ${a})`;
+    const s = p.stops, seg = s.length - 1, x = t * seg;
+    const i = Math.min(seg - 1, Math.floor(x)), f = x - i;
+    const c0 = s[i], c1 = s[i + 1];
+    const r = Math.round(c0[0] + (c1[0] - c0[0]) * f);
+    const g = Math.round(c0[1] + (c1[1] - c0[1]) * f);
+    const b = Math.round(c0[2] + (c1[2] - c0[2]) * f);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
   _draw() {
     if (!this.analyser) return;
     this._computeFeatures();
@@ -290,7 +325,7 @@ export class ClassicVisualizer {
     ctx.shadowBlur = 16 * this._pixelRatio;
     for (let i = 0; i < n; i++) {
       const mag = bands[i], bh = Math.max(2, mag * h * 0.92), x = i * (bw + gap);
-      const color = `hsl(${200 - (i / n) * 200}, 90%, ${35 + mag * 30}%)`;
+      const color = this._col(i / n, 0.55 + mag * 0.45);
       ctx.fillStyle = color; ctx.shadowColor = color;
       ctx.fillRect(x, h - bh, bw, bh);
     }
@@ -309,7 +344,7 @@ export class ClassicVisualizer {
       const mag = bands[i];
       this._peaks[i] = Math.max(mag, this._peaks[i] - this._dt * 0.4);
       const bh = mag * mid * 0.92, x = i * (bw + gap);
-      ctx.fillStyle = `hsl(${((200 - (i / n) * 200 + this._t * 12) % 360 + 360) % 360}, 90%, ${45 + mag * 25}%)`;
+      ctx.fillStyle = this._col(i / n, 0.6 + mag * 0.4);
       ctx.fillRect(x, mid - bh, bw, bh);
       ctx.fillRect(x, mid, bw, bh);
       const py = this._peaks[i] * mid * 0.92;
@@ -328,9 +363,9 @@ export class ClassicVisualizer {
     const n = 96, bands = this._bands(n);
     const amp = h * 0.42;
     const grad = ctx.createLinearGradient(0, 0, w, 0);
-    grad.addColorStop(0, '#21e6c1');
-    grad.addColorStop(0.5, '#7b5cff');
-    grad.addColorStop(1, '#ff4d9d');
+    grad.addColorStop(0, this._col(0));
+    grad.addColorStop(0.5, this._col(0.5));
+    grad.addColorStop(1, this._col(1));
     ctx.beginPath();
     for (let i = 0; i < n; i++) {
       const x = (i / (n - 1)) * w;
@@ -348,7 +383,7 @@ export class ClassicVisualizer {
     ctx.globalAlpha = 1;
     ctx.strokeStyle = grad;
     ctx.lineWidth = 2 * this._pixelRatio;
-    ctx.shadowColor = '#7b5cff';
+    ctx.shadowColor = this._col(0.5);
     ctx.shadowBlur = 12 * this._pixelRatio;
     ctx.stroke();
     ctx.shadowBlur = 0;
@@ -364,7 +399,7 @@ export class ClassicVisualizer {
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(this._rot * 0.2); ctx.lineCap = 'round';
     for (let i = 0; i < n; i++) {
       const mag = bands[i], ang = (i / n) * Math.PI * 2, len = inner + mag * maxLen;
-      ctx.strokeStyle = `hsl(${((i / n) * 360 + this._t * 20) % 360}, 90%, ${45 + mag * 30}%)`;
+      ctx.strokeStyle = this._col(i / n, 0.6 + mag * 0.4);
       ctx.lineWidth = Math.max(1.5, (Math.PI * 2 * inner) / n - 1);
       ctx.beginPath();
       ctx.moveTo(Math.cos(ang) * inner, Math.sin(ang) * inner);
@@ -408,7 +443,7 @@ export class ClassicVisualizer {
     const base = Math.min(w, h) * 0.24 * (1 + this.beatEnv * 0.15), amp = Math.min(w, h) * 0.16;
     const n = this.time.length;
     ctx.lineWidth = Math.max(2, 2.2 * this._pixelRatio);
-    ctx.strokeStyle = `hsl(${(this._t * 30) % 360}, 90%, 60%)`;
+    ctx.strokeStyle = this._col((this._t * 0.08) % 1);
     ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 12 * this._pixelRatio;
     ctx.beginPath();
     for (let i = 0; i <= n; i++) {
@@ -426,8 +461,9 @@ export class ClassicVisualizer {
     ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
     const n = this.time.length;
     ctx.lineWidth = Math.max(2, 2.5 * this._pixelRatio);
-    ctx.strokeStyle = 'hsl(168, 90%, 55%)';
-    ctx.shadowColor = 'hsl(168, 90%, 55%)'; ctx.shadowBlur = 14 * this._pixelRatio;
+    const wc = this._col(0.5);
+    ctx.strokeStyle = wc;
+    ctx.shadowColor = wc; ctx.shadowBlur = 14 * this._pixelRatio;
     ctx.beginPath();
     for (let i = 0; i < n; i++) {
       const v = (this.time[i] - 128) / 128, x = (i / (n - 1)) * w, y = mid + v * mid * 0.9;
@@ -464,13 +500,13 @@ export class ClassicVisualizer {
     const { ctx, canvas } = this;
     const w = canvas.width, h = canvas.height;
     this._fade(0.18);
-    if (this.beatEnv > 0.85) this._ripples.push({ r: 0, a: 1, hue: (this._t * 50) % 360 });
+    if (this.beatEnv > 0.85) this._ripples.push({ r: 0, a: 1, t: Math.random() });
     const cx = w / 2, cy = h / 2, speed = Math.max(w, h) * 0.35;
     for (let i = this._ripples.length - 1; i >= 0; i--) {
       const rp = this._ripples[i];
       rp.r += speed * this._dt; rp.a -= this._dt * 0.55;
       if (rp.a <= 0) { this._ripples.splice(i, 1); continue; }
-      ctx.strokeStyle = `hsla(${rp.hue}, 90%, 60%, ${rp.a})`;
+      ctx.strokeStyle = this._col(rp.t, rp.a);
       ctx.lineWidth = (2 + rp.a * 4) * this._pixelRatio;
       ctx.beginPath(); ctx.arc(cx, cy, rp.r, 0, Math.PI * 2); ctx.stroke();
     }
@@ -765,8 +801,8 @@ export class ClassicVisualizer {
     const w = canvas.width, h = canvas.height;
     ctx.fillStyle = '#0a0a0c'; ctx.fillRect(0, 0, w, h);
     const r = Math.min(w / 2, h) * 0.6;
-    this._gauge(w * 0.28, h * 0.72, r, this.level, 'LEVEL', 168);
-    this._gauge(w * 0.72, h * 0.72, r, this.bass, 'BASS', 30);
+    this._gauge(w * 0.28, h * 0.72, r, this.level, 'LEVEL', 0.3);
+    this._gauge(w * 0.72, h * 0.72, r, this.bass, 'BASS', 0.75);
   }
   _gauge(cx, cy, r, value, label, hue) {
     const { ctx } = this;
@@ -781,7 +817,7 @@ export class ClassicVisualizer {
       ctx.lineTo(cx + Math.cos(a) * (r + 2), cy + Math.sin(a) * (r + 2)); ctx.stroke();
     }
     const v = Math.min(1, value * 1.4), a = start + (end - start) * v;
-    ctx.strokeStyle = `hsl(${hue}, 90%, 60%)`; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 10 * this._pixelRatio;
+    ctx.strokeStyle = this._col(hue); ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 10 * this._pixelRatio;
     ctx.lineWidth = Math.max(2, 3 * this._pixelRatio);
     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * (r - 6), cy + Math.sin(a) * (r - 6)); ctx.stroke();
     ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,255,0.6)';
@@ -976,7 +1012,7 @@ export class ClassicVisualizer {
     }
     ctx.globalAlpha = 1;
     for (const s of stars) {
-      ctx.fillStyle = `hsla(${(s.x / w) * 300}, 90%, 70%, ${0.6 + s.m * 0.4})`;
+      ctx.fillStyle = this._col(s.x / w, 0.6 + s.m * 0.4);
       ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 8 * this._pixelRatio;
       ctx.beginPath(); ctx.arc(s.x, s.y, (1.5 + s.m * 4) * this._pixelRatio, 0, Math.PI * 2); ctx.fill();
     }
