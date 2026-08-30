@@ -25,7 +25,6 @@ const PRESETS = [
   { label: 'Radial', engine: 'classic', mode: 'radial' },
   { label: 'Ring', engine: 'classic', mode: 'ring' },
   { label: 'Waveform', engine: 'classic', mode: 'waveform' },
-  { label: 'VU Meters', engine: 'classic', mode: 'vu' },
   { label: 'Ripple', engine: 'classic', mode: 'ripple' },
   { label: 'Constellation', engine: 'classic', mode: 'constellation' },
 ];
