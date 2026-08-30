@@ -320,6 +320,7 @@ export class ClassicVisualizer {
     const w = canvas.width, h = canvas.height;
     ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
     const n = 64, bands = this._bands(n);
+    if (!this._peaks || this._peaks.length !== n) this._peaks = new Float32Array(n);
     const gap = Math.max(1, Math.round(2 * this._pixelRatio));
     const bw = (w - gap * (n - 1)) / n;
     ctx.shadowBlur = 16 * this._pixelRatio;
@@ -330,6 +331,13 @@ export class ClassicVisualizer {
       ctx.fillRect(x, h - bh, bw, bh);
     }
     ctx.shadowBlur = 0;
+    // Peak-hold white caps that slowly fall (same look as H Bars).
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    for (let i = 0; i < n; i++) {
+      this._peaks[i] = Math.max(bands[i], this._peaks[i] - this._dt * 0.4);
+      const ph = Math.max(2, this._peaks[i] * h * 0.92);
+      ctx.fillRect(i * (bw + gap), h - ph - 2, bw, 2);
+    }
   }
 
   _drawMirror() {
