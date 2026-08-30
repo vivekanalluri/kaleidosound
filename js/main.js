@@ -22,8 +22,8 @@ const PRESETS = [
   { label: 'V Bars', engine: 'classic', mode: 'bars' },
   { label: 'H Bars', engine: 'classic', mode: 'mirror' },
   { label: 'Spectrum', engine: 'classic', mode: 'spectrum' },
+  { label: 'Radial', engine: 'classic', mode: 'radial' },
   { label: 'Constellation', engine: 'classic', mode: 'constellation' },
-  { label: 'Percussion', engine: 'classic', mode: 'hpss' },
 ];
 
 const CYCLE_SECONDS = 20;
