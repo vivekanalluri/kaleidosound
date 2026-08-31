@@ -1,11 +1,14 @@
-// build-www.mjs — assemble the Capacitor web directory.
+// build-www.mjs — assemble the Capacitor / Pages web directory.
 //
-// Capacitor copies a single "webDir" into each native app. We keep the source
-// files at the project root (so the dev server and editing stay simple) and
-// this script gathers just the shippable web assets into ./www, which is what
-// capacitor.config.json points at. Run via `npm run build`.
+// Copies the shippable web assets into ./www, then applies a build version to
+// the entry script, stylesheet, and every local JS import so browsers/CDNs
+// always fetch fresh files after a deploy (no more stale-cache surprises).
+// Run via `npm run build`.
 
-import { rmSync, mkdirSync, cpSync, existsSync } from 'node:fs';
+import {
+  rmSync, mkdirSync, cpSync, existsSync,
+  readFileSync, writeFileSync, readdirSync, statSync,
+} from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 
@@ -29,4 +32,35 @@ for (const item of ASSETS) {
   console.log(`  + ${item}`);
 }
 
-console.log(`Built ${out}`);
+// ---- Cache-busting -------------------------------------------------------
+// A per-build version string appended as ?v=<version> to the entry script,
+// the stylesheet, and all local ES-module imports.
+const VERSION = Date.now().toString(36);
+
+const indexPath = join(out, 'index.html');
+if (existsSync(indexPath)) {
+  let html = readFileSync(indexPath, 'utf8');
+  html = html.replace(/(src="js\/main\.js)"/g, `$1?v=${VERSION}"`);
+  html = html.replace(/(href="styles\.css)"/g, `$1?v=${VERSION}"`);
+  writeFileSync(indexPath, html);
+}
+
+// Append the version to every relative `.js` import specifier so the whole
+// module graph is revalidated, not just the entry file.
+function versionJsImports(dir) {
+  for (const entry of readdirSync(dir)) {
+    const p = join(dir, entry);
+    if (statSync(p).isDirectory()) versionJsImports(p);
+    else if (p.endsWith('.js')) {
+      const code = readFileSync(p, 'utf8');
+      const next = code.replace(
+        /(from\s+['"]\.\/[^'"]+?\.js)(['"])/g,
+        `$1?v=${VERSION}$2`
+      );
+      if (next !== code) writeFileSync(p, next);
+    }
+  }
+}
+versionJsImports(join(out, 'js'));
+
+console.log(`Built ${out} (cache-bust v=${VERSION})`);

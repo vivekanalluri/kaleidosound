@@ -431,6 +431,17 @@ export class ClassicVisualizer {
       ctx.lineTo(Math.cos(ang) * len, Math.sin(ang) * len);
       ctx.stroke();
     }
+    // Peak-hold white markers at each ray's recent maximum (slowly fall back).
+    if (!this._peaks || this._peaks.length !== n) this._peaks = new Float32Array(n);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    for (let i = 0; i < n; i++) {
+      this._peaks[i] = Math.max(bands[i], this._peaks[i] - this._dt * 0.4);
+      const ang = (i / n) * Math.PI * 2;
+      const pr = inner + this._peaks[i] * maxLen;
+      ctx.beginPath();
+      ctx.arc(Math.cos(ang) * pr, Math.sin(ang) * pr, Math.max(1.2, 1.6 * this._pixelRatio), 0, Math.PI * 2);
+      ctx.fill();
+    }
     const cr = inner * (0.5 + this.beatEnv * 0.5);
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, cr);
     g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(1, 'rgba(120,90,255,0)');
@@ -525,14 +536,22 @@ export class ClassicVisualizer {
     const { ctx, canvas } = this;
     const w = canvas.width, h = canvas.height;
     this._fade(0.18);
-    if (this.beatEnv > 0.85) this._ripples.push({ r: 0, a: 1, t: Math.random() });
     const cx = w / 2, cy = h / 2, speed = Math.max(w, h) * 0.35;
+    // Steady cadence so the mode is never blank; faster/brighter when louder.
+    this._rippleAcc = (this._rippleAcc || 0) + this._dt;
+    const interval = Math.max(0.18, 0.5 - this.level * 0.3);
+    if (this._rippleAcc >= interval) {
+      this._rippleAcc = 0;
+      this._ripples.push({ r: 0, a: 0.45 + this.level * 0.45, t: (this._t * 0.08) % 1, w: 2 + this.level * 2 });
+    }
+    // Stronger, brighter rings punched out on beats.
+    if (this.beatEnv > 0.6) this._ripples.push({ r: 0, a: 1, t: Math.random(), w: 4 });
     for (let i = this._ripples.length - 1; i >= 0; i--) {
       const rp = this._ripples[i];
-      rp.r += speed * this._dt; rp.a -= this._dt * 0.55;
+      rp.r += speed * this._dt; rp.a -= this._dt * 0.5;
       if (rp.a <= 0) { this._ripples.splice(i, 1); continue; }
-      ctx.strokeStyle = this._col(rp.t, rp.a);
-      ctx.lineWidth = (2 + rp.a * 4) * this._pixelRatio;
+      ctx.strokeStyle = this._col(rp.t, Math.max(0, rp.a));
+      ctx.lineWidth = (rp.w || 2) * this._pixelRatio;
       ctx.beginPath(); ctx.arc(cx, cy, rp.r, 0, Math.PI * 2); ctx.stroke();
     }
   }
